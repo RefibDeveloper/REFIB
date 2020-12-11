@@ -2444,28 +2444,28 @@ abstract contract ERC677Token is ERC677 {
 
 /**
  * @title REFIB ERC20 token
- * @dev This is part of an implementation of the REFIBASE Index Fund protocol.
- *      REFIBASE is a normal ERC20 token, but its supply can be adjusted by splitting and
+ * @dev This is part of an implementation of the RefinanceBaseProtocol Index Fund protocol.
+ *      RefinanceBaseProtocol is a normal ERC20 token, but its supply can be adjusted by splitting and
  *      combining tokens proportionally across all wallets.
  *
  *      EFIBASE balances are internally represented with a hidden denomination, 'shares'.
  *      We support splitting the currency in expansion and combining the currency on contraction by
  *      changing the exchange rate between the hidden 'shares' and the public 'BASE'.
  */
-contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
+contract RefinanceBaseProtocolToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     // PLEASE READ BEFORE CHANGING ANY ACCOUNTING OR MATH
     // Anytime there is division, there is a risk of numerical instability from rounding errors. In
     // order to minimize this risk, we adhere to the following guidelines:
-    // 1) The conversion rate adopted is the number of shares that equals 1 REFIBASE.
+    // 1) The conversion rate adopted is the number of shares that equals 1 RefinanceBaseProtocol.
     //    The inverse rate must not be used--totalShares is always the numerator and _totalSupply is
-    //    always the denominator. (i.e. If you want to convert shares to REFIBASE instead of
+    //    always the denominator. (i.e. If you want to convert shares to RefinanceBaseProtocol instead of
     //    multiplying by the inverse rate, you should divide by the normal rate)
-    // 2) Share balances converted into REFIBaseToken are always rounded down (truncated).
+    // 2) Share balances converted into RefinanceBaseProtocolToken are always rounded down (truncated).
     //
     // We make the following guarantees:
-    // - If address 'A' transfers x REFIBaseToken to address 'B'. A's resulting external balance will
-    //   be decreased by precisely x REFIBaseToken, and B's external balance will be precisely
-    //   increased by x REFIBaseToken.
+    // - If address 'A' transfers x RefinanceBaseProtocolToken to address 'B'. A's resulting external balance will
+    //   be decreased by precisely x RefinanceBaseProtocolToken, and B's external balance will be precisely
+    //   increased by x RefinanceBaseProtocolToken.
     //
     // We do not guarantee that the sum of all balances equals the result of calling totalSupply().
     // This is because, for any conversion function 'f()' that has non-zero rounding error,
@@ -2493,13 +2493,13 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
 
     uint256 private _totalShares;
     uint256 private _totalSupply;
-    uint256 private _sharesPerREFIBASE;
+    uint256 private _sharesPerRefinanceBaseProtocol;
     mapping(address => uint256) private _shareBalances;
 
 
-    // This is denominated in REFIBaseToken, because the shares-REFIBASE conversion might change before
+    // This is denominated in RefinanceBaseProtocolToken, because the shares-RefinanceBaseProtocol conversion might change before
     // it's fully paid.
-    mapping (address => mapping (address => uint256)) private _allowedREFIBASE;
+    mapping (address => mapping (address => uint256)) private _allowedRefinanceBaseProtocol;
 
     bool public transfersPaused;
     bool public rebasesPaused;
@@ -2540,9 +2540,9 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     }
 
     /**
-     * @dev Notifies REFIBaseToken contract about a new rebase cycle.
-     * @param supplyDelta The number of new REFIBASE tokens to add into circulation via expansion.
-     * @return The total number of REFIBASE after the supply adjustment.
+     * @dev Notifies RefinanceBaseProtocolToken contract about a new rebase cycle.
+     * @param supplyDelta The number of new RefinanceBaseProtocol tokens to add into circulation via expansion.
+     * @return The total number of RefinanceBaseProtocol after the supply adjustment.
      */
     function rebase(uint256 epoch, int256 supplyDelta)
         external
@@ -2566,10 +2566,10 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
             _totalSupply = MAX_SUPPLY;
         }
 
-        _sharesPerREFIBASE = _totalShares.div(_totalSupply);
+        _sharesPerRefinanceBaseProtocol = _totalShares.div(_totalSupply);
 
-        // From this point forward, _sharesPerREFIBASE is taken as the source of truth.
-        // We recalculate a new _totalSupply to be in agreement with the _sharesPerREFIBASE
+        // From this point forward, _sharesPerRefinanceBaseProtocol is taken as the source of truth.
+        // We recalculate a new _totalSupply to be in agreement with the _sharesPerRefinanceBaseProtocol
         // conversion rate.
         // This means our applied supplyDelta can deviate from the requested supplyDelta,
         // but this deviation is guaranteed to be < (_totalSupply^2)/(totalShares - _totalSupply).
@@ -2619,21 +2619,21 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         public
         initializer
     {
-        __ERC20_init("REFIBase", "REFIB");
+        __ERC20_init("RefinanceBaseProtocol", "REFIB");
         _setupDecimals(uint8(DECIMALS));
         __Ownable_init();
 
         _totalShares = INITIAL_SHARES;
         _totalSupply = INITIAL_SUPPLY;
         _shareBalances[owner()] = _totalShares;
-        _sharesPerREFIBASE = _totalShares.div(_totalSupply);
+        _sharesPerRefinanceBaseProtocol = _totalShares.div(_totalSupply);
 		transfersPaused = true;
 		transferPauseExemptList[owner()] = true;
         emit Transfer(address(0x0), owner(), _totalSupply);
     }
 
     /**
-     * @return The total number of REFIBASE.
+     * @return The total number of RefinanceBaseProtocol.
      */
     function totalSupply()
         public
@@ -2654,7 +2654,7 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         view
         returns (uint256)
     {
-        return _shareBalances[who].div(_sharesPerREFIBASE);
+        return _shareBalances[who].div(_sharesPerRefinanceBaseProtocol);
     }
 
     /**
@@ -2671,7 +2671,7 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     {
         require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
 
-        uint256 shareValue = value.mul(_sharesPerREFIBASE);
+        uint256 shareValue = value.mul(_sharesPerRefinanceBaseProtocol);
         _shareBalances[msg.sender] = _shareBalances[msg.sender].sub(shareValue);
         _shareBalances[to] = _shareBalances[to].add(shareValue);
         emit Transfer(msg.sender, to, value);
@@ -2690,7 +2690,7 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
         view
         returns (uint256)
     {
-        return _allowedREFIBASE[owner_][spender];
+        return _allowedRefinanceBaseProtocol[owner_][spender];
     }
 
     /**
@@ -2707,9 +2707,9 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     {
         require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
 
-        _allowedREFIBASE[from][msg.sender] = _allowedREFIBASE[from][msg.sender].sub(value);
+        _allowedRefinanceBaseProtocol[from][msg.sender] = _allowedRefinanceBaseProtocol[from][msg.sender].sub(value);
 
-        uint256 shareValue = value.mul(_sharesPerREFIBASE);
+        uint256 shareValue = value.mul(_sharesPerRefinanceBaseProtocol);
         _shareBalances[from] = _shareBalances[from].sub(shareValue);
         _shareBalances[to] = _shareBalances[to].add(shareValue);
         emit Transfer(from, to, value);
@@ -2735,7 +2735,7 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     {
         require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
 
-        _allowedREFIBASE[msg.sender][spender] = value;
+        _allowedRefinanceBaseProtocol[msg.sender][spender] = value;
         emit Approval(msg.sender, spender, value);
         return true;
     }
@@ -2754,8 +2754,8 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     {
         require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
 
-        _allowedREFIBASE[msg.sender][spender] = _allowedREFIBASE[msg.sender][spender].add(addedValue);
-        emit Approval(msg.sender, spender, _allowedREFIBASE[msg.sender][spender]);
+        _allowedRefinanceBaseProtocol[msg.sender][spender] = _allowedRefinanceBaseProtocol[msg.sender][spender].add(addedValue);
+        emit Approval(msg.sender, spender, _allowedRefinanceBaseProtocol[msg.sender][spender]);
         return true;
     }
 
@@ -2772,13 +2772,13 @@ contract REFIBaseToken is ERC20UpgradeSafe, ERC677Token, OwnableUpgradeSafe {
     {
         require(!transfersPaused || transferPauseExemptList[msg.sender], "paused");
 
-        uint256 oldValue = _allowedREFIBASE[msg.sender][spender];
+        uint256 oldValue = _allowedRefinanceBaseProtocol[msg.sender][spender];
         if (subtractedValue >= oldValue) {
-            _allowedREFIBASE[msg.sender][spender] = 0;
+            _allowedRefinanceBaseProtocol[msg.sender][spender] = 0;
         } else {
-            _allowedREFIBASE[msg.sender][spender] = oldValue.sub(subtractedValue);
+            _allowedRefinanceBaseProtocol[msg.sender][spender] = oldValue.sub(subtractedValue);
         }
-        emit Approval(msg.sender, spender, _allowedREFIBASE[msg.sender][spender]);
+        emit Approval(msg.sender, spender, _allowedRefinanceBaseProtocol[msg.sender][spender]);
         return true;
     }
 }
